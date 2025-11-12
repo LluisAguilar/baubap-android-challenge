@@ -1,15 +1,16 @@
-package com.baubap.challenge.ui.screens
+package com.baubap.challenge.ui.login.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -23,38 +24,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.baubap.challenge.ui.viewmodels.AuthSideEffect
-import com.baubap.challenge.ui.viewmodels.AuthViewModel
-import org.orbitmvi.orbit.compose.collectAsState
-import org.orbitmvi.orbit.compose.collectSideEffect
+import com.baubap.challenge.ui.login.models.AuthState
+import com.baubap.challenge.ui.theme.BaubapChallengeTheme
 
 @Composable
-fun RegisterScreen(
-    onNavigateToLogin: () -> Unit,
-    onNavigateToHome: () -> Unit,
-    viewModel: AuthViewModel = viewModel()
+fun LoginScreen(
+    state: AuthState,
+    onNavigateToRegister: () -> Unit,
+    attemptLogin: (String, String) -> Unit,
+    clearError: () -> Unit,
 ) {
     var email by remember { mutableStateOf("eve.holt@reqres.in") }
-    var password by remember { mutableStateOf("pistol") }
-    var confirmPassword by remember { mutableStateOf("pistol") }
-    var showErrorSnackbar by remember { mutableStateOf(false) }
-
-    val state by viewModel.collectAsState()
-
-    viewModel.collectSideEffect { sideEffect ->
-        when (sideEffect) {
-            is AuthSideEffect.NavigateToHome -> {
-                onNavigateToHome()
-            }
-
-            is AuthSideEffect.ShowError -> {
-                showErrorSnackbar = true
-            }
-        }
-    }
+    var password by remember { mutableStateOf("luis") }
 
     Column(
         modifier = Modifier
@@ -64,7 +48,7 @@ fun RegisterScreen(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "Registro",
+            text = "Login",
             fontSize = 32.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 32.dp)
@@ -72,7 +56,12 @@ fun RegisterScreen(
 
         OutlinedTextField(
             value = email,
-            onValueChange = { email = it },
+            onValueChange = {
+                email = it
+                if (state.errorMessage != null) {
+                    clearError()
+                }
+            },
             label = { Text("Email") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             modifier = Modifier
@@ -83,7 +72,12 @@ fun RegisterScreen(
 
         OutlinedTextField(
             value = password,
-            onValueChange = { password = it },
+            onValueChange = {
+                password = it
+                if (state.errorMessage != null) {
+                    clearError()
+                }
+            },
             label = { Text("Password") },
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -93,57 +87,48 @@ fun RegisterScreen(
             enabled = !state.isLoading
         )
 
-        OutlinedTextField(
-            value = confirmPassword,
-            onValueChange = { confirmPassword = it },
-            label = { Text("Confirmar Password") },
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            enabled = !state.isLoading
-        )
-
-        if (password.isNotBlank() && confirmPassword.isNotBlank() && password != confirmPassword) {
-            Text(
-                text = "Las contraseñas no coinciden",
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-        }
-
         Button(
             onClick = {
-                if (password == confirmPassword) {
-                    viewModel.register(email, password)
-                }
+                attemptLogin.invoke(email, password)
             },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp),
-            enabled = !state.isLoading &&
-                    email.isNotBlank() &&
-                    password.isNotBlank() &&
-                    confirmPassword.isNotBlank() &&
-                    password == confirmPassword
+            enabled = !state.isLoading && email.isNotBlank() && password.isNotBlank()
         ) {
             if (state.isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(16.dp),
                     strokeWidth = 2.dp
                 )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Iniciando sesión...")
             } else {
-                Text("Registrarse")
+                Text("Login")
             }
         }
 
         TextButton(
-            onClick = onNavigateToLogin,
+            onClick = onNavigateToRegister,
             enabled = !state.isLoading
         ) {
-            Text("¿Ya tienes cuenta? Inicia sesión")
+            Text("¿No tienes cuenta? Registrate")
         }
     }
+}
 
+@Preview
+@Composable
+fun LoginScreenPreview() {
+    BaubapChallengeTheme {
+        LoginScreen(
+            state = AuthState(
+                isLoading = false,
+                errorMessage = null
+            ),
+            onNavigateToRegister = {},
+            attemptLogin = { _, _ -> },
+            clearError = {},
+        )
+    }
 }

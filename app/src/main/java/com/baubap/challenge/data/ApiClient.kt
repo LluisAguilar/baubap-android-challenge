@@ -10,11 +10,6 @@ import retrofit2.Retrofit
 object ApiClient {
     private const val BASE_URL = "https://reqres.in/"
 
-    private val json = Json {
-        ignoreUnknownKeys = true
-        isLenient = true
-    }
-
     private val authInterceptor = Interceptor { chain ->
         val requestBuilder = chain.request().newBuilder()
         requestBuilder.addHeader("x-api-key", "reqres-free-v1")
@@ -29,7 +24,7 @@ object ApiClient {
     private val retrofit = Retrofit.Builder()
         .baseUrl(BASE_URL)
         .client(httpClient)
-        .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+        .addConverterFactory(Json.asConverterFactory("application/json".toMediaType()))
         .build()
 
     val apiService: ApiService = retrofit.create(ApiService::class.java)

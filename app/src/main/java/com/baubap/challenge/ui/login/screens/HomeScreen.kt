@@ -1,4 +1,4 @@
-package com.baubap.challenge.ui.screens
+package com.baubap.challenge.ui.login.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -8,16 +8,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.baubap.challenge.ui.viewmodels.AuthViewModel
-import org.orbitmvi.orbit.compose.collectAsState
+import com.baubap.challenge.ui.login.models.AuthState
 
 @Composable
 fun HomeScreen(
     onLogout: () -> Unit,
-    viewModel: AuthViewModel = viewModel()
+    state: AuthState,
 ) {
-    val state by viewModel.collectAsState()
 
     Column(
         modifier = Modifier
@@ -71,7 +68,6 @@ fun HomeScreen(
 
         Button(
             onClick = {
-                viewModel.logout()
                 onLogout()
             },
             modifier = Modifier.fillMaxWidth()
