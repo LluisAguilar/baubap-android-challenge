@@ -1,6 +1,5 @@
-package com.baubap.challenge
+package com.baubap.challenge.ui.screens
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -11,10 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -32,6 +28,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.baubap.challenge.ui.viewmodels.AuthSideEffect
+import com.baubap.challenge.ui.viewmodels.AuthViewModel
 import com.baubap.challenge.ui.theme.BaubapChallengeTheme
 import org.orbitmvi.orbit.compose.collectAsState
 import org.orbitmvi.orbit.compose.collectSideEffect
@@ -42,8 +40,8 @@ fun LoginScreen(
     onNavigateToHome: () -> Unit,
     viewModel: AuthViewModel = viewModel()
 ) {
-    var email = ""
-    var password = ""
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
 
     val state by viewModel.collectAsState()
 

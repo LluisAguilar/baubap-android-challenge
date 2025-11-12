@@ -1,4 +1,4 @@
-package com.baubap.challenge
+package com.baubap.challenge.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -9,7 +9,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.baubap.challenge.ui.viewmodels.AuthViewModel
 import org.orbitmvi.orbit.compose.collectAsState
 
 @Composable

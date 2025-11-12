@@ -1,16 +1,30 @@
-package com.baubap.challenge
+package com.baubap.challenge.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
+import com.baubap.challenge.data.ErrorResponse
+import com.baubap.challenge.data.LoginRequest
+import com.baubap.challenge.data.RegisterRequest
+import com.baubap.challenge.data.ApiClient
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.serialization.json.Json
 import org.orbitmvi.orbit.ContainerHost
 import org.orbitmvi.orbit.viewmodel.container
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 
 data class AuthState(
     val isLoading: Boolean = false,
     val user: User? = null,
     val errorMessage: String? = null,
 )
+
+sealed class MainFlowScreens {
+    object login: MainFlowScreens()
+    object register: MainFlowScreens()
+    object home: MainFlowScreens()
+}
 
 sealed class AuthSideEffect {
     object NavigateToHome : AuthSideEffect()
@@ -24,6 +38,14 @@ data class User(
 )
 
 class AuthViewModel : ViewModel(), ContainerHost<AuthState, AuthSideEffect> {
+
+    private val _screenState: MutableStateFlow<MainFlowScreens> = MutableStateFlow(MainFlowScreens.login)
+    var screenState: StateFlow<MainFlowScreens> = _screenState.asStateFlow()
+
+    private val json = Json {
+        ignoreUnknownKeys = true // ¡Esta es la línea clave!
+        isLenient = true         // Permite JSON malformado (opcional pero útil)
+    }
 
     override val container = container<AuthState, AuthSideEffect>(AuthState())
 
@@ -47,11 +69,11 @@ class AuthViewModel : ViewModel(), ContainerHost<AuthState, AuthSideEffect> {
                         errorMessage = null
                     )
                 }
-                postSideEffect(AuthSideEffect.NavigateToHome)
+                navToHome()
             } else {
                 val errorBody = response.errorBody()?.string()
                 val errorMessage = try {
-                    val errorResponse = Gson().fromJson(errorBody, ErrorResponse::class.java)
+                    val errorResponse = json.decodeFromString<ErrorResponse>(errorBody!!)
                     "Error de login: ${errorResponse.error}"
                 } catch (e: Exception) {
                     when (response.code()) {
@@ -74,8 +96,8 @@ class AuthViewModel : ViewModel(), ContainerHost<AuthState, AuthSideEffect> {
             }
         } catch (e: Exception) {
             val errorMessage = when (e) {
-                is java.net.UnknownHostException -> "Error de conexión: Verifica tu conexión a internet"
-                is java.net.SocketTimeoutException -> "Error de conexión: Tiempo de espera agotado"
+                is UnknownHostException -> "Error de conexión: Verifica tu conexión a internet"
+                is SocketTimeoutException -> "Error de conexión: Tiempo de espera agotado"
                 else -> "Error de conexión: ${e.message}"
             }
             reduce {
@@ -109,11 +131,11 @@ class AuthViewModel : ViewModel(), ContainerHost<AuthState, AuthSideEffect> {
                         errorMessage = null
                     )
                 }
-                postSideEffect(AuthSideEffect.NavigateToHome)
+                navToHome()
             } else {
                 val errorBody = response.errorBody()?.string()
                 val errorMessage = try {
-                    val errorResponse = Gson().fromJson(errorBody, ErrorResponse::class.java)
+                    val errorResponse = json.decodeFromString<ErrorResponse>(errorBody!!)
                     "Error de registro: ${errorResponse.error}"
                 } catch (e: Exception) {
                     when (response.code()) {
@@ -134,10 +156,11 @@ class AuthViewModel : ViewModel(), ContainerHost<AuthState, AuthSideEffect> {
                 }
                 postSideEffect(AuthSideEffect.ShowError(errorMessage))
             }
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
+            e.printStackTrace()
             val errorMessage = when (e) {
-                is java.net.UnknownHostException -> "Error de conexión: Verifica tu conexión a internet"
-                is java.net.SocketTimeoutException -> "Error de conexión: Tiempo de espera agotado"
+                is UnknownHostException -> "Error de conexión: Verifica tu conexión a internet"
+                is SocketTimeoutException -> "Error de conexión: Tiempo de espera agotado"
                 else -> "Error de conexión: ${e.message}"
             }
             reduce {
@@ -156,5 +179,17 @@ class AuthViewModel : ViewModel(), ContainerHost<AuthState, AuthSideEffect> {
 
     fun logout() = intent {
         reduce { state.copy(user = null, errorMessage = null) }
+    }
+
+    fun navToRegister() {
+        _screenState.value = MainFlowScreens.register
+    }
+
+    fun navToHome() {
+        _screenState.value = MainFlowScreens.home
+    }
+
+    fun navToLogin() {
+        _screenState.value = MainFlowScreens.login
     }
 }
